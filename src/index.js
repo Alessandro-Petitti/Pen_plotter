@@ -1,3 +1,5 @@
+//node_modules/.bin/webpack
+//npx serve
 import { Configuration, OpenAIApi } from "openai"; // importa openai
 const configuration = new Configuration
   ({

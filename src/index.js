@@ -40,7 +40,7 @@ class pagine{// crea le variabili di stato per le varie pagine da mostrare
 }
 //definizione delle variabili globali per tutto il file 
 let ww=0,wh=0;
-let button, input, valore_utente, pagina,title;
+let button, input, valore_utente, pagina,title,inserimento_utente;
 let spinnerSize = 192;
 let spinnerSpeed = 10;
 let spinnerColor;
@@ -80,6 +80,9 @@ function show_loading(){
       }
       if(timer ==0){
         pagina.output_img=1;
+        inserimento_utente=createElement('h2',input.value());
+        inserimento_utente.position(0,0);
+
       }
   //pagina.output_img=1;
 }
@@ -144,9 +147,10 @@ function posizionamento_elementi_schermo(){
     title.position(0,0);
     title.style('font-size', round(windowHeight/16) + 'px');
     title.center('horizontal');
-    input.position(875,600);
-    input.style('paddig', 12+'px');
-    button.position(input.x + input.width, input.y);
+    input.center('horizontal');
+    input.position(input.x,320);
+    // modificare qui la posizione, capire perché entra in questo if
+    button.position(input.x + input.width+50, input.y);
     }
 }
 

@@ -11,24 +11,25 @@ async function starter(number_image, User_prompt)
 {
   try
   {
-  const response = await openai.createImage({
+  const response = await openai.createImage
+  ({
     prompt: User_prompt,
     n: number_image,
     size:"256x256",
-    response_format: url,
+    response_format: 'url',
   });
-  } catch(error){
+  console.log("chiamata fatta correttamente");
+  url_response = response.data.text;
+  console.log("url salvato");
+  console.log(url_response);
+  }
+  catch(error)
+  {
     console.log("I got an error");
     console.log(error);
   }
-  const url_response = [];
-  for (let i = 0; i<number_image; i++)
-  {
-    url_response[i] = response.data[i].text;
-  }
-  console.log("gli url sono stati correttamente salvati");
-}
 
+}
 
 class pagine{// crea le variabili di stato per le varie pagine da mostrare
   constructor(){ 
@@ -40,7 +41,9 @@ class pagine{// crea le variabili di stato per le varie pagine da mostrare
 }
 //definizione delle variabili globali per tutto il file 
 let ww=0,wh=0;
-let button, input, valore_utente, pagina,title,inserimento_utente;
+let button, input, valore_utente, pagina,title,inserimento_utente, pic ,url_response; // aggiungi le variabili che dice che non sono definite: url_response and response
+let verifica_chiamata = false; //serve per verificare che la chiamata sia stata fatta all'api
+//variabili per il caricamento
 let spinnerSize = 192;
 let spinnerSpeed = 10;
 let spinnerColor;
@@ -62,6 +65,11 @@ function verifica_risposta(){
 }
 
 function show_loading(){
+  //chiamata all'api:
+  if (verifica_chiamata == false){
+    starter(1,valore_utente);
+    verifica_chiamata = true;
+  }
   //in questa funzione si genera una rotella di caricamento per dare tempo alle immagini di caricarsi
   pagina.loading= 0;
   let step = frameCount % (spinnerSpeed * 7.25);
@@ -88,6 +96,12 @@ function show_loading(){
 }
 
 
+function mostra_immagine(url){
+  pic = createImg(url);
+  image (pic);
+}
+
+
 function setup() {
   //crea le pagine
   pagina = new pagine();
@@ -109,7 +123,8 @@ function draw() {
     }
     else 
     {//stampa a video le immagini, più immagini da un url fornito dall'api, in seguito si potrà scegliere quale delle 4/n usare.
-
+      mostra_immagine(url_response);
+    
       /*for (let i = 0; i<=number_image; i++)
       {
           img.src = url_response[i];

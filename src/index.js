@@ -19,7 +19,7 @@ async function starter(number_image, User_prompt)
     response_format: 'url',
   });
   console.log("chiamata fatta correttamente");
-  url_response = response.data.text;
+  url_response = response.data.data[0].url;
   console.log("url salvato");
   console.log(url_response);
   }
@@ -145,7 +145,7 @@ function posizionamento_elementi_schermo(){
     createCanvas(windowWidth,windowHeight);
     textFont("Arial");
     //inserisci qui il cra input e crea button
-    input = createInput('Un cane che guida una astronave');
+    input = createInput('panda outline');
     input.position(0,0);
     button = createButton('Genera immagine');
     button.position(1000, 1000);

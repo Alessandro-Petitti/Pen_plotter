@@ -37,12 +37,14 @@ class pagine{// crea le variabili di stato per le varie pagine da mostrare
     this.input_prompt=1;
     this.loading = 0;
     this.output_img = 0;
+    this.immagine_stampata= 0;
   }
 }
 //definizione delle variabili globali per tutto il file 
 let ww=0,wh=0;
 let button, input, valore_utente, pagina,title,inserimento_utente, pic ,url_response; // aggiungi le variabili che dice che non sono definite: url_response and response
-let verifica_chiamata = false; //serve per verificare che la chiamata sia stata fatta all'api
+let verifica_chiamata = false;//serve per verificare che la chiamata sia stata fatta all'api
+let immagine_chiamata = false; // serve per verificare che l'immagine sia stata stampata
 //variabili per il caricamento
 let spinnerSize = 192;
 let spinnerSpeed = 10;
@@ -98,8 +100,20 @@ function show_loading(){
 
 function mostra_immagine(url){
   pic = createImg(url);
-  image (pic);
+  image(pic,0,0,256,256);
+  /*setTimeout(function(){
+    image (pic);
+  }, 1000);*/
+  //immagine_stampata = true;
 }
+
+/*function controllo_stampa_immagine(){
+  if (immagine_stampata == true){
+
+
+  }
+
+}*/
 
 
 function setup() {
@@ -121,9 +135,13 @@ function draw() {
       show_loading();
       
     }
-    else 
+    else if(pagina.immagine_stampata == 0) 
     {//stampa a video le immagini, più immagini da un url fornito dall'api, in seguito si potrà scegliere quale delle 4/n usare.
       mostra_immagine(url_response);
+      //controllo_stampa_immagine();
+      pagina.immagine_stampata = 1;
+      pic.center();
+
     
       /*for (let i = 0; i<=number_image; i++)
       {
@@ -166,7 +184,10 @@ function posizionamento_elementi_schermo(){
     input.position(input.x,320);
     // modificare qui la posizione, capire perché entra in questo if
     button.position(input.x + input.width+50, input.y);
+    if(pagina.immagine_stampata == 1){;
+      pic.center();
     }
+  }
 }
 
 

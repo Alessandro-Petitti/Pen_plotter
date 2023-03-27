@@ -19,6 +19,7 @@ class pagine{
     this.loading = 0;
     this.output_img = 0;
     this.immagine_stampata= 0;
+    this.load_completo= 0;
   }
 }
 //inizializza tutti gli elementi e controlla anche che la grandezza della pagina non sia stata modificata
@@ -27,7 +28,7 @@ function posizionamento_elementi_schermo(){
     createCanvas(windowWidth,windowHeight);
     textFont("Arial");
     //inserisci qui il cra input e crea button
-    input = createInput('panda outline');
+    input = createInput('panda outline from far away');
     input.position(0,0);
     button = createButton('Genera immagine');
     button.position(1000, 1000);
@@ -74,12 +75,9 @@ function show_loading()
       strokeCap(SQUARE);
       arc(0, 0, spinnerSize - (spinnerSize / 20), spinnerSize - (spinnerSize / 20), 0, PI + HALF_PI, OPEN);
       pop();
-      if(frameCount%60== 0 && timer >0){
-        timer --;
-      }
-      if(timer ==0){
+      if(pagina.load_completo == 1)//frameCount%60== 0 && timer >0){
+      {
         pagina.output_img=1;
-
       }
 }
 
@@ -105,6 +103,7 @@ async function starter(number_image, User_prompt)
   url_response = response.data.data[0].url;
   console.log("url salvato");
   console.log(url_response);
+  pagina.load_completo = 1;
   }
   catch(error)
   {
@@ -136,16 +135,10 @@ function verifica_risposta(){
 
 
 function mostra_immagine(url){
-  timer = 3;
   pic = createImg(url,"immagine non caricata");
   image(pic);
-  if(frameCount%60== 0 && timer >0){
-    timer --;
-    if(timer ==0){
-      pagina.immagine_stampata = 1;
-   }
-  }
 
+  pagina.immagine_stampata = 1;
 
   /*setTimeout(function(){
     image (pic);
@@ -182,11 +175,19 @@ function draw() {
     }
     else if(pagina.immagine_stampata == 0) 
     {//stampa a video le immagini, più immagini da un url fornito dall'api, in seguito si potrà scegliere quale delle 4/n usare.
-      mostra_immagine(url_response);
+      /*let tempo_0 = millis();
+       while( millis()-tempo_0 < 5000)
+        {
+        }*/
+        if (pagina.load_completo == 1){
+          mostra_immagine(url_response);
+          pic.center();
+        }
       //controllo_stampa_immagine();
-      pic.center();
+   
       
     }
+
   }
   else
   {//pagina iniziale, con input e bottone

@@ -114,6 +114,22 @@ async function starter(number_image, User_prompt)
 }
 
 
+function create_gcode(input) {
+  $.ajax({
+      type: "POST",
+      url: "/reverse_pca.py",
+      data: { param: input },
+      success: callbackFunc
+  });
+}
+
+function callbackFunc(response) {
+  // do something with the response
+  console.log(response);
+}
+
+postData('data to process');
+
 
 
 function inizializza_prima_pagina(){ 
@@ -137,7 +153,7 @@ function verifica_risposta(){
 function mostra_immagine(url){
   pic = createImg(url,"immagine non caricata");
   image(pic);
-
+  //save(pic,"foto.png");
   pagina.immagine_stampata = 1;
 
   /*setTimeout(function(){

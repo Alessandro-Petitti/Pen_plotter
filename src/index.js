@@ -88,7 +88,6 @@ function show_loading() {
   );
   pop();
   if (pagina.load_completo == 1) {
-    //frameCount%60== 0 && timer >0){
     pagina.output_img = 1;
   }
 }
@@ -118,19 +117,6 @@ async function starter(number_image, User_prompt) {
   }
 }
 
-function create_gcode(input) {
-  $.ajax({
-    type: "POST",
-    url: "image_to_gcode.py",
-    data: { param: input },
-   //success: callbackFunc,
-  });
-}
-
-/*function callbackFunc(response) {
-  // do something with the response
-  console.log(response);
-}*/
 
 function inizializza_prima_pagina() {
   //mostra gli elementi della prima pagina
@@ -148,18 +134,18 @@ function verifica_risposta() {
 }
 
 function mostra_immagine(url) {
+  //pic = loadImage(url,imageLoaded);
   pic = createImg(url, "immagine non caricata");
   image(pic);
-  save(pic, 'myImage.png');
+  
   //pic.save("photo", "png");
   pagina.immagine_stampata = 1;
 }
 
-function save_photo(photo){
-  console.log("dentro la function");
-  
- //save('pic.png');
-  
+function imageLoaded() {
+  // l'immagine è stata completamente caricata e visualizzata
+  save(pic, "mia_immagine.jpg"); //salva l'immagine con il nome "mia_immagine.jpg"
+  console.log("immagine salvata correttamente");
 }
 
 
@@ -180,7 +166,7 @@ function draw() {
       if (pagina.load_completo == 1) {
         mostra_immagine(url_response);
         pic.center();
-        save_photo(pic);
+        
       }
     }
   } else {

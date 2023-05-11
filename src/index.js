@@ -15,6 +15,8 @@ let verifica_chiamata = false; //serve per verificare che la chiamata sia stata 
 let spinnerSize = 192;
 let spinnerSpeed = 10;
 let spinnerColor;
+let canva;
+let percorso;
 
 // crea le variabili di stato per le varie pagine da mostrare
 class pagine {
@@ -30,7 +32,7 @@ class pagine {
 //inizializza tutti gli elementi e controlla anche che la grandezza della pagina non sia stata modificata
 function posizionamento_elementi_schermo() {
   if (pagina.inizializzazione == 0) {
-    createCanvas(windowWidth, windowHeight);
+    canva = createCanvas(windowWidth, windowHeight);
     textFont("Arial");
     //inserisci qui il cra input e crea button
     input = createInput("panda outline from far away");
@@ -55,6 +57,7 @@ function posizionamento_elementi_schermo() {
     // modificare qui la posizione, capire perché entra in questo if
     button.position(input.x + input.width + 50, input.y);
     if (pagina.immagine_stampata == 1) {
+      pic.show;
       pic.center();
     }
   }
@@ -88,6 +91,7 @@ function show_loading() {
   );
   pop();
   if (pagina.load_completo == 1) {
+    //frameCount%60== 0 && timer >0){
     pagina.output_img = 1;
   }
 }
@@ -104,17 +108,26 @@ async function starter(number_image, User_prompt) {
       prompt: User_prompt,
       n: number_image,
       size: "256x256",
-      response_format: "url",
+      response_format: "b64_json",
     });
     console.log("chiamata fatta correttamente");
-    url_response = response.data.data[0].url;
-    console.log("url salvato");
-    console.log(url_response);
+    url_response = response.data.data[0].b64_json;
+    console.log("immagine salvata");
+    //carica l'immagine da una stringa di b64json
     pagina.load_completo = 1;
   } catch (error) {
     console.log("I got an error");
     console.log(error);
   }
+}
+
+function create_gcode(input) {
+  $.ajax({
+    type: "POST",
+    url: "image_to_gcode.py",
+    data: { param: input },
+   //success: callbackFunc,
+  });
 }
 
 
@@ -134,19 +147,22 @@ function verifica_risposta() {
 }
 
 function mostra_immagine(url) {
-  //pic = loadImage(url,imageLoaded);
-  pic = createImg(url, "immagine non caricata");
-  image(pic);
-  
-  pic.save("photo", "png");
+
+var a = document.createElement("a"); //Create <a>
+a.href = "data:image/png;base64," + url;
+let name_image = "Image.png"; 
+a.download = (name_image);
+a.click(); //Downloaded file
+percorso = concat("/Users/alessandropetitti/Downloads",name_image);
+preload(percorso);//passare il path dove è contenuta l'immagine 
+
+}
+//carica l'immagine e la da disponilibile non appena è pronta
+function preload(path) {
+  pic = loadImage(path);
   pagina.immagine_stampata = 1;
 }
 
-function imageLoaded() {
-  // l'immagine è stata completamente caricata e visualizzata
-  save(pic, "mia_immagine.jpg"); //salva l'immagine con il nome "mia_immagine.jpg"
-  console.log("immagine salvata correttamente");
-}
 
 
 function setup() {

@@ -138,7 +138,7 @@ function mostra_immagine(url) {
   pic = createImg(url, "immagine non caricata");
   image(pic);
   
-  //pic.save("photo", "png");
+  pic.save("photo", "png");
   pagina.immagine_stampata = 1;
 }
 

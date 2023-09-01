@@ -10,11 +10,35 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "assert": "^2.0.0",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security",
+    "https-browserify": "^1.0.0",
+    "img2gcode": "^1.0.5",
     "node": "^19.6.1",
     "openai": "^3.2.1",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "progress": "^2.0.3",
+    "pyodide": "<https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js>",
+    "python-shell": "^5.0.0",
+    "pythonia": "^1.0.3",
+    "querystring-es3": "^0.2.1",
+    "stream": "^0.0.2",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.1",
+    "util": "^0.12.5",
     "webpack": "^5.76.1"
   },
   "devDependencies": {
     "webpack-cli": "^5.0.1"
+  },
+  "browser": {
+    "os": false,
+    "path": false,
+    "child_process": false
   }
 }

@@ -1,6 +1,17 @@
 //node_modules/.bin/webpack
 //npx serve
 
+/*var img2gcode = require("img2gcode");
+const path = require("path");
+const ProgressBar = require("progress");
+var bar = new ProgressBar("Analyze: [:bar] :percent :etas", {
+  complete: "#",
+  incomplete: ".",
+  width: 60,
+  total: 100
+});
+const immagine = "test.png";*/
+
 //definizione delle variabili globali per tutto il file
 let ww = 0,
     wh = 0;
@@ -10,20 +21,20 @@ let button,
   pagina,
   title,
   pic,
+  launched = false,
   url_response; // aggiungi le variabili che dice che non sono definite: url_response and response
 let verifica_chiamata = false; //serve per verificare che la chiamata sia stata fatta all'api
 let spinnerSize = 192;
 let spinnerSpeed = 10;
 let spinnerColor;
 let canva;
-let percorso;
 
 // crea le variabili di stato per le varie pagine da mostrare
 class pagine {
   constructor() {
     this.inizializzazione = 0;
     this.input_prompt = 1;
-    this.loading = 0;
+    //this.loading = 0; in realtà non serve
     this.output_img = 0;
     this.immagine_stampata = 0;
     this.load_completo = 0;
@@ -57,8 +68,8 @@ function posizionamento_elementi_schermo() {
     // modificare qui la posizione, capire perché entra in questo if
     button.position(input.x + input.width + 50, input.y);
     if (pagina.immagine_stampata == 1) {
-      pic.show;
-      pic.center();
+      //pic.show;
+      //pic.center();
     }
   }
 }
@@ -70,7 +81,6 @@ function show_loading() {
     verifica_chiamata = true;
   }
   //in questa funzione si genera una rotella di caricamento per dare tempo alle immagini di caricarsi
-  pagina.loading = 0;
   let step = frameCount % (spinnerSpeed * 7.25);
   let angle = map(step, 0, spinnerSpeed * 7.25, 0, TWO_PI);
   push();
@@ -90,15 +100,15 @@ function show_loading() {
     OPEN
   );
   pop();
+  
   if (pagina.load_completo == 1) {
-    //frameCount%60== 0 && timer >0){
     pagina.output_img = 1;
   }
 }
 
 import { Configuration, OpenAIApi } from "openai"; // importa openai
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: "",
 });
 const openai = new OpenAIApi(configuration);
 //call the api
@@ -113,22 +123,20 @@ async function starter(number_image, User_prompt) {
     console.log("chiamata fatta correttamente");
     url_response = response.data.data[0].b64_json;
     console.log("immagine salvata");
+
     //carica l'immagine da una stringa di b64json
     pagina.load_completo = 1;
   } catch (error) {
-    console.log("I got an error");
-    console.log(error);
+    //console.log(error);
+    if (error.response) {
+      console.log(error.response.status);
+      console.log(error.response.data);
+    } else {
+      console.log(error.message);
+    }  
   }
 }
 
-function create_gcode(input) {
-  $.ajax({
-    type: "POST",
-    url: "image_to_gcode.py",
-    data: { param: input },
-   //success: callbackFunc,
-  });
-}
 
 
 function inizializza_prima_pagina() {
@@ -138,31 +146,64 @@ function inizializza_prima_pagina() {
 }
 
 function verifica_risposta() {
-  //nasconde l'imput box e cambia pagina
+  //nasconde l'input box e cambia pagina
   pagina.input_prompt = 0;
   valore_utente = input.value();
-  pagina.loading = 1;
+  //pagina.loading = 1; in realtà non serve
   input.hide();
   button.hide();
 }
 
 function mostra_immagine(url) {
-
 var a = document.createElement("a"); //Create <a>
 a.href = "data:image/png;base64," + url;
 let name_image = "Image.png"; 
 a.download = (name_image);
 a.click(); //Downloaded file
-percorso = concat("/Users/alessandropetitti/Downloads",name_image);
-preload(percorso);//passare il path dove è contenuta l'immagine 
-
-}
-//carica l'immagine e la da disponilibile non appena è pronta
-function preload(path) {
-  pic = loadImage(path);
-  pagina.immagine_stampata = 1;
+pagina.immagine_stampata = 1;
 }
 
+/*
+const options = {
+  // It is mm
+  toolDiameter: 1,
+  sensitivity: 0.9, // intensity sensitivity
+  // scaleAxes: 128, // default: image.height equal mm
+  feedrate: { work: 1200, idle: 3000 }, // Only the corresponding line is added.
+  deepStep: -1, // default: -1
+  whiteZ: 0, // default: 0
+  blackZ: -0.01,
+  safeZ: 1,
+  info: "emitter", // ["none" | "console" | "emitter"] default: "none"
+  gcodeFile: 'fine.gcode',
+  image: immagine
+};
+
+function imgToGCode(options) {
+  return new Promise(function(resolve, reject) {
+    img2gcode
+    .start(options)
+    .on("log", str => console.log(str))
+    .on("tick", data => bar.update(data))
+    .on("error", reject)
+    .on("complete", data => {
+      // console.log(data.config);
+      // console.log(data.dirgcode);
+      console.log("complete");
+    })
+    .then(data => {
+      // console.log(data.config);
+      console.log(data.dirgcode);
+      console.log(data.gcode)
+      resolve(data);
+    });
+});
+}
+console.time("img2gcode");
+imgToGCode(options).then(() => {
+  console.timeEnd("img2gcode");
+});
+*/
 
 
 function setup() {
@@ -176,20 +217,30 @@ function draw() {
   background("rgba(217,220,229,255)");
   posizionamento_elementi_schermo();
   if (pagina.input_prompt == 0) {
-    if (pagina.output_img == 0) {
-      show_loading();
-    } else if (pagina.immagine_stampata == 0) {
-      if (pagina.load_completo == 1) {
-        mostra_immagine(url_response);
-        pic.center();
-        
-      }
+    show_loading();
+    if (!launched){
+      aleale();
+      
+
+      /*console.time("img2gcode");
+      imgToGCode(options).then(() => {
+        console.timeEnd("img2gcode");
+      });*/
+    launched = true;
+    }
+      if (pagina.immagine_stampata == 0) 
+      {
+        if (pagina.load_completo == 1)
+        {
+          mostra_immagine(url_response);
+        }
     }
   } else {
     //pagina iniziale, con input e bottone
     inizializza_prima_pagina();
   }
 }
+
 
 window.setup = setup;
 window.draw = draw;

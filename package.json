@@ -16,7 +16,8 @@
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
     "https-browserify": "^1.0.0",
-    "img2gcode": "^1.0.5",
+    "img2gcode": "^1.2.0",
+    "jimp": "^0.22.10",
     "node": "^19.6.1",
     "openai": "^3.2.1",
     "os": "^0.1.2",
@@ -38,7 +39,7 @@
   },
   "browser": {
     "os": false,
-    "path": false,
-    "child_process": false
+    "child_process": false,
+    "jimp": true
   }
 }

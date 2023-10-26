@@ -1,92 +1,56 @@
 //node_modules/.bin/webpack
 //npx serve
 
+//--------------------------------------import & config----------------------------------------------------------------
+
 import * as img2gcode from "../src/src_module";
+import { Configuration, OpenAIApi } from "openai";
 
-//definizione delle variabili globali per tutto il file
-let ww = 0,
-  wh = 0;
-let button,
-  input,
-  valore_utente,
-  pagina,
+//global variable
+let ww = 0, //window width
+  wh = 0, //window height
+  button, //generate image
+  input, //input box for prompt
+  valore_utente, //store the prompt
+  pagina, //destined to create the .pagine class
   title,
-  subtitle,
-  immagine_download,
-  url_response;
-let verifica_chiamata = false; //serve per verificare che la chiamata sia stata fatta all'api
-let spinnerSize = 192;
-let spinnerSpeed = 10;
-let spinnerColor;
-let canva;
-let fine_caricamento = true;
+  url_response, //save the b64 string (responde of the api)
+  spinnerColor,
+  canva,
+  list, // list of instructions
+  stringa_gcode, //stores the full formatted gcode
+  istruzioni_mostrate = 0, //check if final istruction are shown
+  verifica_chiamata = false, //check if Api call was made
+  spinnerSize = 192,
+  spinnerSpeed = 10;
 
-// crea le variabili di stato per le varie pagine da mostrare
+//creates the state variable to change pages
 class pagine {
   constructor() {
     this.inizializzazione = 0;
     this.input_prompt = 1;
     this.output_img = 0;
+    this.pic_downloaded = 0;
     this.load_completo = 0;
+    this.show_instruction = 0;
   }
 }
 
-//image2gcode con un buffer
-const convert = (image) =>
-  new Promise((resolve, reject) => {
-    //terzo modo per decodificare un b64json
-    let buffer = Buffer.from(image, "base64");
+//--------------------------------------initializing----------------------------------------------------------------
 
-    img2gcode
-      .start({
-        // It is mm
-        toolDiameter: 1,
-        sensitivity: 0.9, // intensity sensitivity
-        // scaleAxes: 128, // default: image.height equal mm
-        feedrate: { work: 1200, idle: 3000 }, // Only the corresponding line is added.
-        deepStep: -1, // default: -1
-        // invest: {x:true, y: false},
-        whiteZ: 0, // default: 0
-        blackZ: -3,
-        safeZ: 1,
-        info: "emitter", // ["none" | "console" | "emitter"] default: "none"
-        image: buffer,
-      })
-      .on("error", (data) => {
-        resolve({
-          success: false,
-          error: data,
-        });
-      })
-      .on("complete", (data) => {
-        console.log("conversione completata");
-      })
-      .then((data) => {
-        resolve({
-          success: true,
-          data,
-        });
-      });
-  });
-
-//inizializza tutti gli elementi e controlla anche che la grandezza della pagina non sia stata modificata
+//initialize first page, check if page dimension changed, adapt if so
 function posizionamento_elementi_schermo() {
   if (pagina.inizializzazione == 0) {
-    canva = createCanvas(windowWidth, windowWidth);
+    canva = createCanvas(windowWidth, windowHeight);
     textFont("Arial");
-    textSize(25);
     input = createInput("panda outline from far away");
     input.position(0, 0);
-    input.size(300, 20);
-    input.style("font-size", "20px");
-    button = createButton("Generate Image");
-
-    button.position((windowWidth * 3) / 4, (windowWidth * 3) / 4);
+    button = createButton("Genera immagine");
+    button.position(1000, 1000);
     button.mousePressed(verifica_risposta);
     input.hide();
     button.hide();
-    title = createElement("h1", "Pen Plotter Project");
-    subtitle = createElement("h3", "Insert your prompt:");
+    title = createElement("h1", "Pen plotter project");
     pagina.inizializzazione = 1;
   }
   if (!(windowWidth == ww) || !(windowHeight == wh)) {
@@ -96,31 +60,22 @@ function posizionamento_elementi_schermo() {
     title.position(0, 0);
     title.style("font-size", round(windowHeight / 16) + "px");
     title.center("horizontal");
-    if (pagina.input_prompt == 1) {
-      subtitle.style("font-size", round(windowHeight / 32) + "px");
-      subtitle.position(title.x, title.y + 100);
-      subtitle.center("horizontal");
-    } else {
-      subtitle.html("Your image is being generated and converted: ");
-      subtitle.style("font-size", round(windowHeight / 32) + "px");
-      subtitle.position(title.x, title.y + 100);
-      subtitle.center("horizontal");
-    }
     input.center("horizontal");
     input.position(input.x, 320);
-    // modificare qui la posizione, capire perché entra in questo if
     button.position(input.x + input.width + 50, input.y);
   }
 }
 
+//----------------------------------------loading page----------------------------------------------------------
+
 function show_loading() {
-  //chiamata all'api:
+  //calls (once) the api, to get the image
   if (verifica_chiamata == false) {
-    starter(1, valore_utente);
+    API_call(1, valore_utente);
     verifica_chiamata = true;
   }
+  //shows a spinngin wheel, until the operation aren't competed
   if (fine_caricamento) {
-    //in questa funzione si genera una rotella di caricamento per dare tempo alle immagini di caricarsi
     let step = frameCount % (spinnerSpeed * 7.25);
     let angle = map(step, 0, spinnerSpeed * 7.25, 0, TWO_PI);
     push();
@@ -142,34 +97,15 @@ function show_loading() {
     pop();
   }
 }
-//Oggetto per scaricare un file contenente il gcode
-function downloadStringAsFile(data, filename) {
-  const blob = new Blob([data], { type: "text/plain" });
-  const url = window.URL.createObjectURL(blob);
 
-  const b = document.createElement("b");
-  b.style.display = "none";
-  b.href = url;
-  b.download = filename;
-
-  document.body.appendChild(b);
-  b.click();
-
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(b);
-}
-
-// Usa la funzione per scaricare la stringa come file
-let fileName = "risu.gcode";
-
-import { Configuration, OpenAIApi } from "openai"; // importa openai
+//---------------------------- API call and related functions --------------------------------------------------
 
 const configuration = new Configuration({
   apiKey: "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",
 });
 const openai = new OpenAIApi(configuration);
 //call the api
-async function starter(number_image, User_prompt) {
+async function API_call(number_image, User_prompt) {
   try {
     const response = await openai.createImage({
       prompt: User_prompt,
@@ -177,28 +113,25 @@ async function starter(number_image, User_prompt) {
       size: "256x256",
       response_format: "b64_json",
     });
-
+    console.log("chiamata fatta correttamente");
     url_response = response.data.data[0].b64_json;
-    console.log("immagine ricevuta");
-    convert(url_response)
+    //downloads img
+    downalod_img(url_response);
+    //convert_image
+    convert_img_to_gcode(url_response)
       .then((result) => {
-        console.log("Img convertita correttamente");
+        console.log("Img convertita correttamente: ");
         console.log(result);
-        //prova di download del gcode
-        //downloadStringAsFile(result, fileName);
+        //salvo il file del gcode formattato
+        stringa_gcode = result.data.gcode.join("\n");
+        downloadGcodeFile(stringa_gcode, "def.gcode");
+        pagina.show_instruction = 1;
       })
       .catch((error) => {
         console.error(error);
       });
-    //Caricare l'immagine sulla tela:
-    immagine_download = loadImage("data:image/png;base64," + url_response);
-    //function per scaricare l'immagine in locale
-    scarica_immagine(url_response);
-    //cambia pagina dopo che ha finito di fare tutti i suoi contatti
-    pagina.load_completo = 1;
-    //rimuovi la rotella dallo schermo
-    fine_caricamento = false;
   } catch (error) {
+    //console.log(error);
     if (error.response) {
       console.log(error.response.status);
       console.log(error.response.data);
@@ -208,32 +141,115 @@ async function starter(number_image, User_prompt) {
   }
 }
 
-function inizializza_prima_pagina() {
-  //mostra gli elementi della prima pagina
-  button.show();
-  input.show();
-}
-
-function verifica_risposta() {
-  //nasconde l'input box e cambia pagina
-  pagina.input_prompt = 0;
-  valore_utente = input.value();
-  subtitle.html("Your image is being generated and converted: ");
-  subtitle.style("font-size", round(windowHeight / 32) + "px");
-  subtitle.position(title.x, title.y + 100);
-  subtitle.center("horizontal");
-  input.hide();
-  button.hide();
-}
-
-function scarica_immagine(url) {
+//downloads the image from a b64json string
+function downalod_img(url) {
   var a = document.createElement("a"); //Create <a>
   a.href = "data:image/png;base64," + url;
   let name_image = "Image.png";
   a.download = name_image;
   a.click(); //Downloaded file
+
+  pagina.pic_downloaded = 1;
 }
 
+//converts image from a buffer to gcode
+const convert_img_to_gcode = (image) =>
+  new Promise((resolve, reject) => {
+    //terzo modo per decodificare un b64json
+    let buffer = Buffer.from(image, "base64");
+
+    img2gcode
+      .start({
+        // It is mm
+        toolDiameter: 1,
+        sensitivity: 0.9, // intensity sensitivity
+        // scaleAxes: 128, // default: image.height equal mm
+        feedrate: { work: 1200, idle: 3000 }, // Only the corresponding line is added.
+        deepStep: -1, // default: -1
+        // invest: {x:true, y: false},
+        laser: {
+          commandPowerOn: "M04",
+          commandPowerOff: "M05",
+        },
+        whiteZ: 0, // default: 0
+        blackZ: -3,
+        safeZ: 1,
+        info: "emitter", // ["none" | "console" | "emitter"] default: "none"
+        image: buffer,
+      })
+      .on("error", (data) => {
+        resolve({
+          success: false,
+          error: data,
+        });
+      })
+      .on("complete", (data) => {
+        // console.log(data.config);
+        // console.log(data.dirgcode);
+        console.log("complete");
+      })
+      .then((data) => {
+        resolve({
+          success: true,
+          data,
+        });
+      });
+  });
+
+function downloadGcodeFile(gcodeString, fileName) {
+  var a = document.createElement("a");
+  var blob = new Blob([gcodeString], { type: "text/plain" });
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+}
+
+//---------------------------------------- Visual functions --------------------------------------------------------------
+
+//shows elements of the landing page
+function inizializza_prima_pagina() {
+  button.show();
+  input.show();
+}
+
+//stores the user's imput, hides the button and the input box
+function verifica_risposta() {
+  pagina.input_prompt = 0;
+  valore_utente = input.value();
+  input.hide();
+  button.hide();
+}
+
+//shows the final's instructions list
+function instruction() {
+  if (istruzioni_mostrate == 0) {
+    list = createElement("ol");
+    list.child(createElement("li", "Open the terminal"));
+    list.child(createElement("li", "Run 'CNC' to launch the sender"));
+    list.child(
+      createElement("li", "Chose the correct port and import the .gocde file")
+    );
+    list.position(50, 50);
+    list.style("font-size", round(windowHeight / 16) + "px");
+    list.center("horizontal");
+    list.center("vertical");
+    istruzioni_mostrate = 1;
+  }
+  //if window is resized
+  if (!(windowWidth == ww) || !(windowHeight == wh)) {
+    ww = windowWidth;
+    wh = windowHeight;
+    resizeCanvas(windowWidth, windowHeight);
+    title.position(0, 0);
+    title.style("font-size", round(windowHeight / 16) + "px");
+    title.center("horizontal");
+    list.position(50, 50); // Posiziona l'elenco nella pagina
+    list.style("font-size", round(windowHeight / 16) + "px");
+    list.center("horizontal");
+    list.center("vertical");
+  }
+}
+//---------------------------------- Exectution -----------------------------------------------------------------
 function setup() {
   //crea le pagine
   pagina = new pagine();
@@ -246,16 +262,19 @@ function draw() {
   posizionamento_elementi_schermo();
   if (pagina.input_prompt == 0) {
     show_loading();
-      if (pagina.load_completo == 1) {
-        if (immagine_download) {
-          image(immagine_download, subtitle.x, subtitle.y + 300);
-        }
+    if (pagina.pic_downloaded == 1) {
+      fine_caricamento = false; //elimnates the loading wheel
+      if (pagina.show_instruction == 1) {
+        instruction(); //show the instruction to continue
+      }
     }
   } else {
-    //pagina iniziale, con input e bottone
+    //creates the first page, wait until "generate" button is pressed
     inizializza_prima_pagina();
   }
 }
 
 window.setup = setup;
 window.draw = draw;
+
+//------------------------------------------ END! ---------------------------------------------------------------

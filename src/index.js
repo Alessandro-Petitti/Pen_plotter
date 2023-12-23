@@ -101,7 +101,7 @@ function show_loading() {
 //---------------------------- API call and related functions --------------------------------------------------
 
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: ""// insert here your api key
 });
 const openai = new OpenAIApi(configuration);
 //call the api

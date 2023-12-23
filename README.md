@@ -13,19 +13,19 @@ Welcome to the Pen Plotter GitHub repository! This project combines the power of
 
 1. Clone the repository to your local machine:
 
-   ```bash
-   git clone https://github.com/your-username/pen-plotter.git
-   cd pen-plotter
-  ```
+```bash
+git clone https://github.com/your-username/pen-plotter.git
+cd pen-plotter
+```
 2. Install dependencies:
-  ```bash
-   npm install
-  ```
+```bash
+npm install
+```
 
 3. Run the application:
-  ```bash
-   npm start
-  ```
+```bash
+npm start
+```
 
 4. Access the GUI in your web browser at **http://localhost:3000**.
 
@@ -44,3 +44,5 @@ Welcome to the Pen Plotter GitHub repository! This project combines the power of
 
 
 Feel free to contribute, and happy plotting! 🖋️🎨
+
+This project was developed as an exctracurricular project, special thanks to Eng. Costanza Cenerini.       

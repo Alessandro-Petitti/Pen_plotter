@@ -40,6 +40,8 @@ npm start
 
 ## Planned Upgrades
 **More Image Options**: Provide additional image options and allow users to choose the best one.
+
+
 **GUI Improvement**: Enhance the GUI for a better user experience.
 
 
